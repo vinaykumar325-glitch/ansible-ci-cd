@@ -1,150 +1,82 @@
-<!DOCTYPE html>
-<html>
-<head>
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f4f4f4;
-  color: #333;
-  margin: 0;
-  padding: 0;
+terraform {
+  required_version = "~> 0.14" # which means any version equal & above 0.14 like 0.15, 0.16 etc and < 1.xx
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.0"
+    }
+  }
 }
-
-.container {
-  width: 800px;
-  margin: 50px auto;
-  padding: 20px;
-  background-color: #fff;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+provider "aws" {
+  region  = var.aws_region
+  profile = "default"
 }
-
-.header {
-  text-align: center;
-  margin-bottom: 20px;
+resource "aws_instance" "my-ec2-vm" {
+  ami                    = "ami-0915bcb5fa77e4892"
+  instance_type          = "t2.micro"
+  key_name               = "cloud-key" 
+  count                  = 1
+  user_data              = <<-EOF
+    #!/bin/bash
+    sudo yum update -y
+    sudo yum install httpd -y
+    sudo systemctl enable httpd
+    sudo systemctl start httpd
+    echo "<h1>Welcome to terra cloud ! AWS Infra created using Terraform in north california Region</h1>" > /var/www/html/index.html
+    EOF
+  vpc_security_group_ids = [aws_security_group.vpc-ssh.id, aws_security_group.vpc-web.id]
+  tags = {
+    "Name" = "cloud-server"
+  }
 }
-
-.logo {
-  display: inline-block;
-  margin: 0 10px;
-  width: 100px;
+resource "aws_key_pair" "deployer" {
+  key_name   = "cloud-key"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 email@example.com"
+} 
+resource "aws_security_group" "vpc-ssh" {
+  name        = "vpc-ssh"
+  description = "Dev VPC SSH"
+  ingress {
+    description = "Allow Port 22"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    description = "Allow all IP and Ports outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
+resource "aws_security_group" "vpc-web" {
+  name        = "traffic-web"
+  description = "Dev VPC Web"
 
-.logo img {
-  width: 100%;
-}
+  ingress {
+    description = "Allow Port 80"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-h1 {
-  font-size: 32px;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
+  ingress {
+    description = "Allow Port 443"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = "0.0.0.0/0"
+  }
 
-h2 {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.certificate {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.certificate h3 {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.date {
-  font-size: 16px;
-  margin-bottom: 20px;
-}
-
-.name {
-  font-size: 36px;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.details {
-  margin-bottom: 20px;
-}
-
-.details p {
-  margin-bottom: 5px;
-}
-
-.details strong {
-  font-weight: bold;
-}
-
-.modules {
-  margin-bottom: 20px;
-}
-
-.modules ul {
-  list-style-type: disc;
-  padding-left: 20px;
-}
-
-.modules li {
-  margin-bottom: 5px;
-}
-
-.footer {
-  text-align: center;
-  margin-top: 20px;
-}
-
-.footer p {
-  margin-bottom: 5px;
-}
-
-.footer strong {
-  font-weight: bold;
-}
-
-.signature {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.signature img {
-  width: 150px;
-}
-
-.signature p {
-  margin-top: 10px;
-}
-</style>
-</head>
-<body>
-<div class="container">
- 
-  <div class="certificate">
-    <h1>CERTIFICATE OF COMPLETION</h1>
-    <h3 class="date"> AUG 1 2024</h3>
-    <h2 class="name">CHILAMALA VINAY KUMAR </h2>
-  </div>
-
-  <div class="details">
-    <p><strong>DevOps Virtual Internship</strong></p>
-    <p>During the 8 Weeks period of Virtual Internship (August-October 2022), vinnu has completed the following DevOps Virtual Internshi:</p>
-  </div>
-
-  <div class="modules">
-    <ul>
-      <li>azure CI/CD</li>
-      <li>Jenkins Setup</li>
-      <li> Process Automation</li>
-      <li>CI/CD</li>
-      <li>Ansible CI/CD</li>
-      <li>code commit</li>
-      <li>AWS Pipeline</li>
-      <li>EC2 pipeline</li>
-      <li>one click deployement</li>
-    </ul>
-</div>
-</body>
-</html>
+  egress {
+    description = "Allow all IP and Ports outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}    
+    
