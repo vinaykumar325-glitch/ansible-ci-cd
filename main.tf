@@ -9,10 +9,9 @@ terraform {
 }
 provider "aws" {
   region  = "us-east-1"
-  profile = "default"
 }
 resource "aws_instance" "my-ec2-vm" {
-  ami                    = "ami-0915bcb5fa77e4892"
+  ami                    = "ami-0ae8f15ae66fe8cda"
   instance_type          = "t2.micro"
   key_name               = "cloud-key" 
   count                  = 1
