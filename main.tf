@@ -1,5 +1,5 @@
 terraform {
-  required_version = "~> 1.9.4" 
+  required_version = "~> 2.0.8" 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -13,7 +13,7 @@ provider "aws" {
 resource "aws_instance" "my-ec2-vm" {
   ami                    = "ami-0ae8f15ae66fe8cda"
   instance_type          = "t2.micro"
-  key_name               = "cloud-key" 
+  key_name               = "vinay-key" 
   count                  = 1
   user_data              = <<-EOF
     #!/bin/bash
